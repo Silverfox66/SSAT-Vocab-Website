@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSAT Word Quest</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">SSAT Vocab Studio</p>
+          <h1>Study 1000 SSAT words with flashcards, quizzes, analogies, and games.</h1>
+          <p class="hero-text">
+            A study site built for repetition, speed, and confidence. Flip cards,
+            test yourself, practice analogy patterns, and jump into quick mini-games!
+          </p>
+          <div class="hero-actions">
+            <button class="primary" data-jump="flashcards">Start Flashcards</button>
+            <button class="secondary" data-jump="quiz">Take a Quiz</button>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="metric">
+            <span class="metric-label">Words</span>
+            <strong id="word-count">1000</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Mastered</span>
+            <strong id="mastered-count">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Quiz Score</span>
+            <strong id="best-score">0%</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="panel dashboard">
+          <div>
+            <p class="section-kicker">Study Modes</p>
+            <h2>Pick a mode and keep moving.</h2>
+          </div>
+          <nav class="mode-grid">
+            <button class="mode-card active" data-mode="flashcards">
+              <span>Flashcards</span>
+              <small>Flip, shuffle, and mark mastered words.</small>
+            </button>
+            <button class="mode-card" data-mode="quiz">
+              <span>Quiz</span>
+              <small>Multiple-choice checks with instant feedback.</small>
+            </button>
+            <button class="mode-card" data-mode="analogies">
+              <span>Analogies</span>
+              <small>Practice SSAT-style relationship questions.</small>
+            </button>
+            <button class="mode-card" data-mode="games">
+              <span>Mini Games</span>
+              <small>Matching and speed drills for quick reps.</small>
+            </button>
+            <button class="mode-card" data-mode="wordbank">
+              <span>Word Bank</span>
+              <small>Search the full 1000-word list anytime.</small>
+            </button>
+          </nav>
+        </section>
+
+        <section class="workspace">
+          <section class="study-panel active" id="flashcards">
+            <div class="panel-header">
+              <div>
+                <p class="section-kicker">Flashcards</p>
+                <h2>Flip through the word bank.</h2>
+              </div>
+              <div class="chip-row">
+                <input id="flashcard-search" type="search" placeholder="Search a word..." />
+                <button class="ghost" id="shuffle-cards">Shuffle</button>
+              </div>
+            </div>
+            <div class="flashcard-stage">
+              <button class="nav-arrow" id="prev-card" aria-label="Previous card">&#10094;</button>
+              <div class="flashcard" id="flashcard">
+                <div class="flashcard-face flashcard-front">
+                  <p class="flashcard-label">Word</p>
+                  <h3 id="card-word"></h3>
+                  <p id="card-part"></p>
+                </div>
+                <div class="flashcard-face flashcard-back">
+                  <p class="flashcard-label">Meaning</p>
+                  <p id="card-definition"></p>
+                  <p id="card-example"></p>
+                </div>
+              </div>
+              <button class="nav-arrow" id="next-card" aria-label="Next card">&#10095;</button>
+            </div>
+            <div class="toolbar">
+              <button class="primary" id="flip-card">Flip Card</button>
+              <button class="secondary" id="mark-mastered">Mark Mastered</button>
+              <span class="status" id="card-status"></span>
+            </div>
+          </section>
+
+          <section class="study-panel" id="quiz">
+            <div class="panel-header">
+              <div>
+                <p class="section-kicker">Quiz Yourself</p>
+                <h2>Answer a fresh vocab question.</h2>
+              </div>
+              <div class="chip-row">
+                <span class="pill" id="quiz-progress">Question 1</span>
+                <span class="pill" id="quiz-score">Score 0/0</span>
+              </div>
+            </div>
+            <div class="quiz-card panel inset">
+              <p class="prompt-label">What does this word mean?</p>
+              <h3 id="quiz-word"></h3>
+              <div class="option-grid" id="quiz-options"></div>
+              <p class="feedback" id="quiz-feedback"></p>
+              <div class="toolbar">
+                <button class="secondary" id="next-question">Next Question</button>
+                <button class="ghost" id="reset-quiz">Reset Quiz</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-panel" id="analogies">
+            <div class="panel-header">
+              <div>
+                <p class="section-kicker">Analogies Practice</p>
+                <h2>Spot the relationship and finish the pair.</h2>
+              </div>
+              <div class="chip-row">
+                <span class="pill" id="analogy-progress">Set 1</span>
+              </div>
+            </div>
+            <div class="quiz-card panel inset">
+              <p class="prompt-label">Choose the best answer.</p>
+              <h3 id="analogy-stem"></h3>
+              <div class="option-grid" id="analogy-options"></div>
+              <p class="feedback" id="analogy-feedback"></p>
+              <p class="explanation" id="analogy-explanation"></p>
+              <div class="toolbar">
+                <button class="secondary" id="next-analogy">Next Analogy</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-panel" id="games">
+            <div class="panel-header">
+              <div>
+                <p class="section-kicker">Mini Games</p>
+                <h2>Practice in short, energetic bursts.</h2>
+              </div>
+            </div>
+            <div class="games-grid">
+              <div class="panel inset">
+                <div class="game-head">
+                  <div>
+                    <h3>Match Sprint</h3>
+                    <p>Pair words to meanings before the board fills your head.</p>
+                  </div>
+                  <button class="ghost" id="reset-match">New Board</button>
+                </div>
+                <div class="match-grid" id="match-grid"></div>
+                <p class="feedback" id="match-feedback"></p>
+              </div>
+              <div class="panel inset">
+                <div class="game-head">
+                  <div>
+                    <h3>Lightning Round</h3>
+                    <p>Beat the timer by picking the right meaning fast.</p>
+                  </div>
+                  <button class="ghost" id="start-speed">Restart</button>
+                </div>
+                <div class="speed-box">
+                  <div class="timer-ring">
+                    <strong id="speed-timer">30</strong>
+                    <span>seconds</span>
+                  </div>
+                  <div class="speed-content">
+                    <p class="prompt-label">Tap the correct meaning for:</p>
+                    <h3 id="speed-word"></h3>
+                    <div class="option-grid compact" id="speed-options"></div>
+                    <p class="feedback" id="speed-feedback"></p>
+                    <p class="status">Round Score: <span id="speed-score">0</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-panel" id="wordbank">
+            <div class="panel-header">
+              <div>
+                <p class="section-kicker">Full Word Bank</p>
+                <h2>Browse all 1000 words.</h2>
+              </div>
+              <div class="chip-row">
+                <input id="wordbank-search" type="search" placeholder="Search the word bank..." />
+              </div>
+            </div>
+            <div class="wordbank-list panel inset" id="wordbank-list"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
