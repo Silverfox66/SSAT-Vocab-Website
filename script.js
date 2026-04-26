@@ -1,11 +1,11 @@
 const QUIZ_LENGTH = 10;
-
+const BEST_QUIZ_SCORE_KEY = "vocab-best-quiz-score";
 const state = {
   currentMode: "flashcards",
   flashcards: [...VOCAB_WORDS],
   cardIndex: 0,
   mastered: new Set(JSON.parse(localStorage.getItem("vocab-mastered") || "[]")),
-  bestScore: Number(localStorage.getItem("vocab-best-score") || 0),
+  bestScore: Number(localStorage.getItem(BEST_QUIZ_SCORE_KEY) || 0),
   quiz: { asked: 0, correct: 0, current: null, answered: false, complete: false },
   analogies: shuffle([...ANALOGIES]),
   analogyIndex: 0,
@@ -76,7 +76,7 @@ function updateMetrics() {
 
 function saveProgress() {
   localStorage.setItem("vocab-mastered", JSON.stringify([...state.mastered]));
-  localStorage.setItem("vocab-best-score", String(state.bestScore));
+  localStorage.setItem(BEST_QUIZ_SCORE_KEY, String(state.bestScore));
   updateMetrics();
 }
 
@@ -189,11 +189,6 @@ function answerQuiz(button, option) {
         choice.classList.add("correct");
       }
     });
-  }
-  const percent = Math.round((state.quiz.correct / state.quiz.asked) * 100);
-  if (percent > state.bestScore) {
-    state.bestScore = percent;
-    saveProgress();
   }
   elements.quizProgress.textContent =
     state.quiz.asked >= QUIZ_LENGTH ? `Round Complete` : `Question ${state.quiz.asked + 1} of ${QUIZ_LENGTH}`;
