@@ -1998,11 +1998,11 @@ const ALL_WORDS = RAW_WORDS.trim().split("\n").map((line, index) => {
     word,
     part,
     definition,
-    example: `${word[0].toUpperCase()}${word.slice(1)} can appear in SSAT reading and writing practice.`,
+    example: `${word[0].toUpperCase()}${word.slice(1)} is a strong word to keep in your active vocabulary.`,
   };
 });
 
-const SSAT_WORDS = ALL_WORDS.slice(0, 1000);
+const VOCAB_WORDS = ALL_WORDS.slice(0, 1000);
 
 const ANALOGIES = [
   {
