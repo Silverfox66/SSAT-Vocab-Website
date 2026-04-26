@@ -1,10 +1,12 @@
+const QUIZ_LENGTH = 10;
+
 const state = {
   currentMode: "flashcards",
-  flashcards: [...SSAT_WORDS],
+  flashcards: [...VOCAB_WORDS],
   cardIndex: 0,
-  mastered: new Set(JSON.parse(localStorage.getItem("ssat-mastered") || "[]")),
-  bestScore: Number(localStorage.getItem("ssat-best-score") || 0),
-  quiz: { asked: 0, correct: 0, current: null, answered: false },
+  mastered: new Set(JSON.parse(localStorage.getItem("vocab-mastered") || "[]")),
+  bestScore: Number(localStorage.getItem("vocab-best-score") || 0),
+  quiz: { asked: 0, correct: 0, current: null, answered: false, complete: false },
   analogies: shuffle([...ANALOGIES]),
   analogyIndex: 0,
   match: { board: [], selected: [], matched: 0, locked: false },
@@ -28,6 +30,7 @@ const elements = {
   quizWord: document.getElementById("quiz-word"),
   quizOptions: document.getElementById("quiz-options"),
   quizFeedback: document.getElementById("quiz-feedback"),
+  quizSummary: document.getElementById("quiz-summary"),
   quizProgress: document.getElementById("quiz-progress"),
   quizScore: document.getElementById("quiz-score"),
   analogyStem: document.getElementById("analogy-stem"),
@@ -56,7 +59,7 @@ function shuffle(items) {
 }
 
 function sampleWords(excludedWord, count) {
-  return shuffle(SSAT_WORDS.filter((entry) => entry.word !== excludedWord)).slice(0, count);
+  return shuffle(VOCAB_WORDS.filter((entry) => entry.word !== excludedWord)).slice(0, count);
 }
 
 function setMode(mode) {
@@ -66,14 +69,14 @@ function setMode(mode) {
 }
 
 function updateMetrics() {
-  elements.wordCount.textContent = String(SSAT_WORDS.length);
+  elements.wordCount.textContent = String(VOCAB_WORDS.length);
   elements.masteredCount.textContent = String(state.mastered.size);
   elements.bestScore.textContent = `${state.bestScore}%`;
 }
 
 function saveProgress() {
-  localStorage.setItem("ssat-mastered", JSON.stringify([...state.mastered]));
-  localStorage.setItem("ssat-best-score", String(state.bestScore));
+  localStorage.setItem("vocab-mastered", JSON.stringify([...state.mastered]));
+  localStorage.setItem("vocab-best-score", String(state.bestScore));
   updateMetrics();
 }
 
@@ -100,7 +103,7 @@ function renderFlashcard() {
 
 function updateFlashcardSearch() {
   const query = elements.flashcardSearch.value.trim().toLowerCase();
-  state.flashcards = SSAT_WORDS.filter((entry) => {
+  state.flashcards = VOCAB_WORDS.filter((entry) => {
     if (!query) {
       return true;
     }
@@ -133,8 +136,19 @@ function toggleMastered() {
 }
 
 function newQuizQuestion() {
+  if (state.quiz.complete) {
+    return;
+  }
+  if (!state.quiz.answered && state.quiz.asked > 0) {
+    elements.quizFeedback.textContent = "Answer the current question before moving on.";
+    return;
+  }
+  if (state.quiz.asked >= QUIZ_LENGTH) {
+    finishQuiz();
+    return;
+  }
   state.quiz.answered = false;
-  const correct = SSAT_WORDS[Math.floor(Math.random() * SSAT_WORDS.length)];
+  const correct = VOCAB_WORDS[Math.floor(Math.random() * VOCAB_WORDS.length)];
   const options = shuffle([
     correct.definition,
     ...sampleWords(correct.word, 3).map((entry) => entry.definition),
@@ -143,6 +157,8 @@ function newQuizQuestion() {
   elements.quizWord.textContent = correct.word;
   elements.quizOptions.innerHTML = "";
   elements.quizFeedback.textContent = "";
+  elements.quizSummary.textContent = "";
+  document.getElementById("next-question").textContent = "Next Question";
   options.forEach((option) => {
     const button = document.createElement("button");
     button.className = "option-btn";
@@ -150,12 +166,12 @@ function newQuizQuestion() {
     button.addEventListener("click", () => answerQuiz(button, option));
     elements.quizOptions.appendChild(button);
   });
-  elements.quizProgress.textContent = `Question ${state.quiz.asked + 1}`;
+  elements.quizProgress.textContent = `Question ${state.quiz.asked + 1} of ${QUIZ_LENGTH}`;
   elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.asked}`;
 }
 
 function answerQuiz(button, option) {
-  if (state.quiz.answered || !state.quiz.current) {
+  if (state.quiz.answered || !state.quiz.current || state.quiz.complete) {
     return;
   }
   state.quiz.answered = true;
@@ -179,13 +195,36 @@ function answerQuiz(button, option) {
     state.bestScore = percent;
     saveProgress();
   }
-  elements.quizProgress.textContent = `Question ${state.quiz.asked}`;
+  elements.quizProgress.textContent =
+    state.quiz.asked >= QUIZ_LENGTH ? `Round Complete` : `Question ${state.quiz.asked + 1} of ${QUIZ_LENGTH}`;
   elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.asked}`;
+  if (state.quiz.asked >= QUIZ_LENGTH) {
+    finishQuiz();
+  }
 }
 
 function resetQuiz() {
-  state.quiz = { asked: 0, correct: 0, current: null, answered: false };
+  state.quiz = { asked: 0, correct: 0, current: null, answered: false, complete: false };
+  elements.quizFeedback.textContent = "";
+  elements.quizSummary.textContent = "";
   newQuizQuestion();
+}
+
+function finishQuiz() {
+  state.quiz.complete = true;
+  state.quiz.current = null;
+  const percent = Math.round((state.quiz.correct / QUIZ_LENGTH) * 100);
+  elements.quizWord.textContent = "Round complete";
+  elements.quizOptions.innerHTML = "";
+  elements.quizFeedback.textContent = `You finished all ${QUIZ_LENGTH} questions.`;
+  elements.quizSummary.textContent = `Final score: ${state.quiz.correct}/${QUIZ_LENGTH} (${percent}%). Press Reset Quiz to play another round.`;
+  elements.quizProgress.textContent = "Round Complete";
+  elements.quizScore.textContent = `Score ${state.quiz.correct}/${QUIZ_LENGTH}`;
+  document.getElementById("next-question").textContent = "Quiz Complete";
+  if (percent > state.bestScore) {
+    state.bestScore = percent;
+    saveProgress();
+  }
 }
 
 function renderAnalogy() {
@@ -233,7 +272,7 @@ function nextAnalogy() {
 
 function buildMatchBoard() {
   state.match = { board: [], selected: [], matched: 0, locked: false };
-  const chosen = shuffle(SSAT_WORDS).slice(0, 6);
+  const chosen = shuffle(VOCAB_WORDS).slice(0, 6);
   const cards = shuffle([
     ...chosen.map((entry) => ({ id: entry.word, pairId: entry.id, type: "word", text: entry.word })),
     ...chosen.map((entry) => ({
@@ -301,7 +340,7 @@ function setSpeedTimerVisual() {
 }
 
 function newSpeedQuestion() {
-  const correct = SSAT_WORDS[Math.floor(Math.random() * SSAT_WORDS.length)];
+  const correct = VOCAB_WORDS[Math.floor(Math.random() * VOCAB_WORDS.length)];
   const options = shuffle([
     correct.definition,
     ...sampleWords(correct.word, 3).map((entry) => entry.definition),
@@ -361,7 +400,7 @@ function startSpeedRound() {
 
 function renderWordBank() {
   const query = elements.wordbankSearch.value.trim().toLowerCase();
-  const words = SSAT_WORDS.filter((entry) => {
+  const words = VOCAB_WORDS.filter((entry) => {
     if (!query) {
       return true;
     }
