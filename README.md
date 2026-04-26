@@ -1,2 +1,2 @@
-# SSAT-Vocab-Website
-Learn SSAT words that strengthen your Vocab skills
+# Vocab-Website
+Learn words that strengthen your Vocab skills
