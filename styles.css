@@ -236,6 +236,52 @@ input {
 .study-panel.active {
   display: block;
 }
+.site-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 10px 0;
+  color: var(--muted);
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer a {
+  color: var(--primary-dark);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: var(--shadow);
+  transition: transform 0.14s ease, background 0.14s ease;
+}
+
+.github-link:hover {
+  transform: translateY(-1px);
+  background: rgba(20, 108, 120, 0.12);
+  text-decoration: none;
+}
+
+.github-link svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
 
 .panel-header {
   display: flex;
@@ -468,4 +514,9 @@ input {
   .mode-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.site-footer {
+  flex-direction: column;
+  text-align: center;
 }
