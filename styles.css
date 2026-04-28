@@ -236,6 +236,7 @@ input {
 .study-panel.active {
   display: block;
 }
+
 .site-footer {
   display: flex;
   justify-content: center;
@@ -263,8 +264,8 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.74);
@@ -279,8 +280,8 @@ input {
 }
 
 .github-link svg {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
 
@@ -325,6 +326,45 @@ input {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(247, 198, 107, 0.22)),
     var(--panel-strong);
+}
+
+.flashcard-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.speaker-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  padding: 0;
+  border: 1px solid rgba(20, 108, 120, 0.16);
+  border-radius: 999px;
+  background: rgba(20, 108, 120, 0.08);
+  color: var(--primary-dark);
+  box-shadow: none;
+  transform: none;
+}
+
+.speaker-button:hover {
+  transform: none;
+  background: rgba(20, 108, 120, 0.14);
+}
+
+.speaker-button.speaking {
+  background: rgba(20, 108, 120, 0.2);
+}
+
+.speaker-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 .flashcard-back {
@@ -515,9 +555,9 @@ input {
   .mode-grid {
     grid-template-columns: 1fr;
   }
-}
 
-.site-footer {
-  flex-direction: column;
-  text-align: center;
+  .site-footer {
+    flex-direction: column;
+    text-align: center;
+  }
 }
