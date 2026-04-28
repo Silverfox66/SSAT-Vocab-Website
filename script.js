@@ -1,5 +1,6 @@
 const QUIZ_LENGTH = 10;
 const BEST_QUIZ_SCORE_KEY = "vocab-best-quiz-score";
+
 const state = {
   currentMode: "flashcards",
   flashcards: [...VOCAB_WORDS],
@@ -21,6 +22,7 @@ const elements = {
   masteredCount: document.getElementById("mastered-count"),
   bestScore: document.getElementById("best-score"),
   flashcard: document.getElementById("flashcard"),
+  speakWord: document.getElementById("speak-word"),
   cardWord: document.getElementById("card-word"),
   cardPart: document.getElementById("card-part"),
   cardDefinition: document.getElementById("card-definition"),
@@ -91,6 +93,10 @@ function renderFlashcard() {
   }
 
   const card = state.flashcards[state.cardIndex];
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+  elements.speakWord.classList.remove("speaking");
   elements.flashcard.classList.remove("flipped");
   elements.cardWord.textContent = card.word;
   elements.cardPart.textContent = card.part;
@@ -99,6 +105,36 @@ function renderFlashcard() {
   elements.cardStatus.textContent = state.mastered.has(card.word)
     ? "Mastered"
     : `Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
+}
+
+function speakCurrentWord(event) {
+  event.stopPropagation();
+  const current = state.flashcards[state.cardIndex];
+  if (!current || !("speechSynthesis" in window)) {
+    elements.cardStatus.textContent = current
+      ? "Speech isn't available in this browser."
+      : "";
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(current.word);
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.onstart = () => {
+    elements.speakWord.classList.add("speaking");
+    elements.cardStatus.textContent = `Speaking: ${current.word}`;
+  };
+  utterance.onend = () => {
+    elements.speakWord.classList.remove("speaking");
+    elements.cardStatus.textContent = state.mastered.has(current.word)
+      ? "Mastered"
+      : `Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
+  };
+  utterance.onerror = () => {
+    elements.speakWord.classList.remove("speaking");
+    elements.cardStatus.textContent = "Couldn't speak that word just now.";
+  };
+  window.speechSynthesis.speak(utterance);
 }
 
 function updateFlashcardSearch() {
@@ -415,6 +451,7 @@ function renderWordBank() {
 
 document.getElementById("flip-card").addEventListener("click", () => elements.flashcard.classList.toggle("flipped"));
 elements.flashcard.addEventListener("click", () => elements.flashcard.classList.toggle("flipped"));
+elements.speakWord.addEventListener("click", speakCurrentWord);
 document.getElementById("prev-card").addEventListener("click", () => nextCard(-1));
 document.getElementById("next-card").addEventListener("click", () => nextCard(1));
 document.getElementById("shuffle-cards").addEventListener("click", () => {
