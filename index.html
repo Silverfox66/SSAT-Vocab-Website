@@ -91,7 +91,16 @@
               <button class="nav-arrow" id="prev-card" aria-label="Previous card">&#10094;</button>
               <div class="flashcard" id="flashcard">
                 <div class="flashcard-face flashcard-front">
-                  <p class="flashcard-label">Word</p>
+                  <div class="flashcard-topline">
+                    <p class="flashcard-label">Word</p>
+                    <button class="speaker-button" id="speak-word" aria-label="Speak this word" title="Speak this word">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 3.23v17.54a1 1 0 0 1-1.62.78L7.7 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h3.7l4.68-3.55A1 1 0 0 1 14 3.23Z"></path>
+                        <path d="M18.36 8.64a1 1 0 0 1 1.41 0 4.98 4.98 0 0 1 0 7.06 1 1 0 1 1-1.41-1.41 2.98 2.98 0 0 0 0-4.24 1 1 0 0 1 0-1.41Z"></path>
+                        <path d="M20.83 6.17a1 1 0 0 1 1.41 0 8.48 8.48 0 0 1 0 11.98 1 1 0 1 1-1.41-1.41 6.48 6.48 0 0 0 0-9.16 1 1 0 0 1 0-1.41Z"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <h3 id="card-word"></h3>
                   <p id="card-part"></p>
                 </div>
