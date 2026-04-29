@@ -1991,22 +1991,18 @@ zone|noun|an area or region
 zoology|noun|the study of animals
 `;
 
-function articleFor(word) {
-  return /^[aeiou]/i.test(word) ? "an" : "a";
-}
-
 function buildExample(word, part, definition) {
   switch (part) {
     case "verb":
-      return `During discussion, students might ${word} a point when they want to ${definition}.`;
+      return `The verb "${word}" means "${definition}."`;
     case "adjective":
-      return `The teacher chose ${articleFor(word)} ${word} example to show something that was ${definition}.`;
+      return `If something is "${word}," it is ${definition}.`;
     case "adverb":
-      return `The class responded ${word} when the challenge became more difficult.`;
+      return `Writers use "${word}" to describe an action that happens ${definition}.`;
     case "conjunction":
-      return `We kept reading, ${word} the passage was harder than expected.`;
+      return `The word "${word}" can link ideas that mean "${definition}."`;
     default:
-      return `In the story, ${articleFor(word)} ${word} helped show ${definition}.`;
+      return `The word "${word}" refers to ${definition}.`;
   }
 }
 
