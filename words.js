@@ -1991,6 +1991,25 @@ zone|noun|an area or region
 zoology|noun|the study of animals
 `;
 
+function articleFor(word) {
+  return /^[aeiou]/i.test(word) ? "an" : "a";
+}
+
+function buildExample(word, part, definition) {
+  switch (part) {
+    case "verb":
+      return `During discussion, students might ${word} a point when they want to ${definition}.`;
+    case "adjective":
+      return `The teacher chose ${articleFor(word)} ${word} example to show something that was ${definition}.`;
+    case "adverb":
+      return `The class responded ${word} when the challenge became more difficult.`;
+    case "conjunction":
+      return `We kept reading, ${word} the passage was harder than expected.`;
+    default:
+      return `In the story, ${articleFor(word)} ${word} helped show ${definition}.`;
+  }
+}
+
 const ALL_WORDS = RAW_WORDS.trim().split("\n").map((line, index) => {
   const [word, part, definition] = line.split("|");
   return {
@@ -1998,7 +2017,7 @@ const ALL_WORDS = RAW_WORDS.trim().split("\n").map((line, index) => {
     word,
     part,
     definition,
-    example: `${word[0].toUpperCase()}${word.slice(1)} is a strong word to keep in your active vocabulary.`,
+    example: buildExample(word, part, definition),
   };
 });
 
