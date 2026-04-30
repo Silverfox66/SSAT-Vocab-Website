@@ -2018,19 +2018,51 @@ function paraphraseDefinition(definition) {
     .replace(/^to\s+/i, "");
 }
 
+function pickByWord(word, choices) {
+  let hash = 0;
+  for (let i = 0; i < word.length; i += 1) {
+    hash = (hash * 31 + word.charCodeAt(i)) >>> 0;
+  }
+  return choices[hash % choices.length];
+}
+
 function buildExample(word, part, definition) {
   const hint = paraphraseDefinition(definition);
   switch (part) {
     case "verb":
-      return `Writers use "${word}" when someone needs to ${hint}.`;
+      return pickByWord(word, [
+        `The story uses "${word}" for a moment when someone decides to ${hint}.`,
+        `In the passage, "${word}" appears when a character has to ${hint}.`,
+        `A writer might choose "${word}" for a scene where someone must ${hint}.`,
+        `The sentence uses "${word}" to suggest what it looks like to ${hint}.`,
+      ]);
     case "adjective":
-      return `Writers use "${word}" for something that feels ${hint}.`;
+      return pickByWord(word, [
+        `The author describes the scene as "${word}" so it feels ${hint}.`,
+        `When a moment seems "${word}," readers picture something ${hint}.`,
+        `The word "${word}" gives the setting a feeling that is ${hint}.`,
+        `A writer might call the scene "${word}" to suggest something ${hint}.`,
+      ]);
     case "adverb":
-      return `Writers use "${word}" when an action happens ${hint}.`;
+      return pickByWord(word, [
+        `The sentence uses "${word}" to show an action happening ${hint}.`,
+        `When someone moves "${word}," the action feels ${hint}.`,
+        `A writer might choose "${word}" to describe something done ${hint}.`,
+        `The word "${word}" helps readers imagine an action unfolding ${hint}.`,
+      ]);
     case "conjunction":
-      return `You might use "${word}" when one idea connects to another in a dependent or contrasting way.`;
+      return pickByWord(word, [
+        `We kept reading, ${word} the chapter had become more difficult.`,
+        `The plan looked risky, ${word} everyone agreed it was worth trying.`,
+        `She stayed calm, ${word} the room around her was chaotic.`,
+      ]);
     default:
-      return `Writers use "${word}" for ${hint}.`;
+      return pickByWord(word, [
+        `The passage mentions "${word}" and helps readers picture ${hint}.`,
+        `When the narrator refers to "${word}," the scene takes on the feel of ${hint}.`,
+        `The word "${word}" gives readers a clearer image of ${hint}.`,
+        `In the chapter, "${word}" appears as a detail that suggests ${hint}.`,
+      ]);
   }
 }
 
