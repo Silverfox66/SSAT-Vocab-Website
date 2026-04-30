@@ -1991,18 +1991,46 @@ zone|noun|an area or region
 zoology|noun|the study of animals
 `;
 
+function paraphraseDefinition(definition) {
+  return definition
+    .replace(/^to make embarrassed/i, "make someone feel awkward")
+    .replace(/^to lessen in intensity/i, "grow weaker")
+    .replace(/^to leave behind completely/i, "walk away from it for good")
+    .replace(/^to lower in rank or dignity/i, "humiliate someone")
+    .replace(/^to put an end to/i, "bring something to a stop")
+    .replace(/^to give up power or responsibility/i, "step away from leadership")
+    .replace(/^to help or encourage, often in wrongdoing/i, "push someone toward trouble")
+    .replace(/^to hate deeply/i, "despise it completely")
+    .replace(/^complete and total/i, "without any limit at all")
+    .replace(/^miserable or degraded/i, "utterly broken in spirit")
+    .replace(/^burning brightly/i, "lit up with flames")
+    .replace(/^having skill or power/i, "ready and capable")
+    .replace(/^very unpleasant or hateful/i, "so awful that people recoil from it")
+    .replace(/^rough or harsh in manner/i, "sharp and unpleasant")
+    .replace(/^hard to understand/i, "so confusing that most people struggle with it")
+    .replace(/^ridiculously unreasonable/i, "so unreasonable that it seems silly")
+    .replace(/^more than enough/i, "present in generous amounts")
+    .replace(/^a person who /i, "someone who ")
+    .replace(/^a place where someone lives/i, "someone's home")
+    .replace(/^the state of being /i, "the feeling of being ")
+    .replace(/^something different from the usual pattern/i, "an unusual break from the normal pattern")
+    .replace(/^a monastery or convent/i, "a quiet religious home")
+    .replace(/^to\s+/i, "");
+}
+
 function buildExample(word, part, definition) {
+  const hint = paraphraseDefinition(definition);
   switch (part) {
     case "verb":
-      return `The verb "${word}" means "${definition}."`;
+      return `Writers use "${word}" when someone needs to ${hint}.`;
     case "adjective":
-      return `If something is "${word}," it is ${definition}.`;
+      return `Writers use "${word}" for something that feels ${hint}.`;
     case "adverb":
-      return `Writers use "${word}" to describe an action that happens ${definition}.`;
+      return `Writers use "${word}" when an action happens ${hint}.`;
     case "conjunction":
-      return `The word "${word}" can link ideas that mean "${definition}."`;
+      return `You might use "${word}" when one idea connects to another in a dependent or contrasting way.`;
     default:
-      return `The word "${word}" refers to ${definition}.`;
+      return `Writers use "${word}" for ${hint}.`;
   }
 }
 
