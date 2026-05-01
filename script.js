@@ -268,7 +268,6 @@ function answerQuiz(button, option) {
       }
     });
   }
-  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.questionIndex + 1}`;
 }
 
 function resetQuiz() {
