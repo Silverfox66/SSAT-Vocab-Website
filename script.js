@@ -1,4 +1,5 @@
 const QUIZ_LENGTH = 10;
+const QUIZ_ROUNDS_PER_LEVEL = 10;
 const BEST_QUIZ_SCORE_KEY = "vocab-best-quiz-score";
 
 const state = {
@@ -7,7 +8,7 @@ const state = {
   cardIndex: 0,
   mastered: new Set(JSON.parse(localStorage.getItem("vocab-mastered") || "[]")),
   bestScore: Number(localStorage.getItem(BEST_QUIZ_SCORE_KEY) || 0),
-  quiz: { asked: 0, correct: 0, current: null, answered: false, complete: false },
+  quiz: { level: "easy", roundIndex: 0, questionIndex: 0, correct: 0, current: null, answered: false, complete: false },
   analogies: { level: "easy", setIndex: 0, questionIndex: 0, answered: false },
   match: { board: [], selected: [], matched: 0, locked: false },
   speed: { timer: 30, score: 0, current: null, intervalId: null, active: false },
@@ -28,6 +29,7 @@ const elements = {
   cardExample: document.getElementById("card-example"),
   cardStatus: document.getElementById("card-status"),
   flashcardSearch: document.getElementById("flashcard-search"),
+  quizLevel: document.getElementById("quiz-level"),
   quizWord: document.getElementById("quiz-word"),
   quizOptions: document.getElementById("quiz-options"),
   quizFeedback: document.getElementById("quiz-feedback"),
@@ -63,6 +65,39 @@ function shuffle(items) {
 function sampleWords(excludedWord, count) {
   return shuffle(VOCAB_WORDS.filter((entry) => entry.word !== excludedWord)).slice(0, count);
 }
+
+function quizDifficultyScore(entry) {
+  let score = entry.word.length + entry.definition.split(" ").length;
+  if (entry.part === "adverb" || entry.part === "conjunction") {
+    score += 2;
+  }
+  if (/(tion|sion|ious|eous|ph|mn|ps|x)/i.test(entry.word)) {
+    score += 1;
+  }
+  return score;
+}
+
+function buildQuizBanks() {
+  const sorted = [...VOCAB_WORDS].sort((left, right) => quizDifficultyScore(left) - quizDifficultyScore(right));
+  const third = Math.floor(sorted.length / 3);
+  const pools = {
+    easy: shuffle(sorted.slice(0, third)),
+    medium: shuffle(sorted.slice(third, third * 2)),
+    hard: shuffle(sorted.slice(third * 2)),
+  };
+  return Object.fromEntries(
+    Object.entries(pools).map(([level, pool]) => {
+      const rounds = [];
+      for (let roundIndex = 0; roundIndex < QUIZ_ROUNDS_PER_LEVEL; roundIndex += 1) {
+        const start = roundIndex * QUIZ_LENGTH;
+        rounds.push(pool.slice(start, start + QUIZ_LENGTH));
+      }
+      return [level, { pool, rounds }];
+    })
+  );
+}
+
+const QUIZ_BANKS = buildQuizBanks();
 
 function setMode(mode) {
   state.currentMode = mode;
@@ -171,25 +206,31 @@ function toggleMastered() {
   renderFlashcard();
 }
 
+function currentQuizBank() {
+  return QUIZ_BANKS[state.quiz.level];
+}
+
+function currentQuizRound() {
+  return currentQuizBank().rounds[state.quiz.roundIndex];
+}
+
 function newQuizQuestion() {
   if (state.quiz.complete) {
     return;
   }
-  if (!state.quiz.answered && state.quiz.asked > 0) {
+  if (state.quiz.current && !state.quiz.answered) {
     elements.quizFeedback.textContent = "Answer the current question before moving on.";
     return;
   }
-  if (state.quiz.asked >= QUIZ_LENGTH) {
-    finishQuiz();
-    return;
-  }
   state.quiz.answered = false;
-  const correct = VOCAB_WORDS[Math.floor(Math.random() * VOCAB_WORDS.length)];
+  const correct = currentQuizRound()[state.quiz.questionIndex];
+  const distractorPool = currentQuizBank().pool.filter((entry) => entry.word !== correct.word);
   const options = shuffle([
     correct.definition,
-    ...sampleWords(correct.word, 3).map((entry) => entry.definition),
+    ...shuffle(distractorPool).slice(0, 3).map((entry) => entry.definition),
   ]);
   state.quiz.current = { correct, options };
+  elements.quizLevel.value = state.quiz.level;
   elements.quizWord.textContent = correct.word;
   elements.quizOptions.innerHTML = "";
   elements.quizFeedback.textContent = "";
@@ -202,8 +243,10 @@ function newQuizQuestion() {
     button.addEventListener("click", () => answerQuiz(button, option));
     elements.quizOptions.appendChild(button);
   });
-  elements.quizProgress.textContent = `Question ${state.quiz.asked + 1} of ${QUIZ_LENGTH}`;
-  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.asked}`;
+  const levelLabel = state.quiz.level[0].toUpperCase() + state.quiz.level.slice(1);
+  elements.quizProgress.textContent =
+    `${levelLabel} • Quiz ${state.quiz.roundIndex + 1} of ${QUIZ_ROUNDS_PER_LEVEL} • Question ${state.quiz.questionIndex + 1} of ${QUIZ_LENGTH}`;
+  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.questionIndex}`;
 }
 
 function answerQuiz(button, option) {
@@ -211,7 +254,6 @@ function answerQuiz(button, option) {
     return;
   }
   state.quiz.answered = true;
-  state.quiz.asked += 1;
   const isCorrect = option === state.quiz.current.correct.definition;
   if (isCorrect) {
     state.quiz.correct += 1;
@@ -226,16 +268,15 @@ function answerQuiz(button, option) {
       }
     });
   }
-  elements.quizProgress.textContent =
-    state.quiz.asked >= QUIZ_LENGTH ? `Round Complete` : `Question ${state.quiz.asked + 1} of ${QUIZ_LENGTH}`;
-  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.asked}`;
-  if (state.quiz.asked >= QUIZ_LENGTH) {
-    finishQuiz();
-  }
+  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.questionIndex + 1}`;
 }
 
 function resetQuiz() {
-  state.quiz = { asked: 0, correct: 0, current: null, answered: false, complete: false };
+  state.quiz.correct = 0;
+  state.quiz.questionIndex = 0;
+  state.quiz.current = null;
+  state.quiz.answered = false;
+  state.quiz.complete = false;
   elements.quizFeedback.textContent = "";
   elements.quizSummary.textContent = "";
   newQuizQuestion();
@@ -249,13 +290,41 @@ function finishQuiz() {
   elements.quizOptions.innerHTML = "";
   elements.quizFeedback.textContent = `You finished all ${QUIZ_LENGTH} questions.`;
   elements.quizSummary.textContent = `Final score: ${state.quiz.correct}/${QUIZ_LENGTH} (${percent}%). Press Reset Quiz to play another round.`;
-  elements.quizProgress.textContent = "Round Complete";
+  const levelLabel = state.quiz.level[0].toUpperCase() + state.quiz.level.slice(1);
+  elements.quizProgress.textContent = `${levelLabel} • Quiz ${state.quiz.roundIndex + 1} of ${QUIZ_ROUNDS_PER_LEVEL} • Round Complete`;
   elements.quizScore.textContent = `Score ${state.quiz.correct}/${QUIZ_LENGTH}`;
-  document.getElementById("next-question").textContent = "Quiz Complete";
+  document.getElementById("next-question").textContent =
+    state.quiz.roundIndex === QUIZ_ROUNDS_PER_LEVEL - 1 ? "Restart Level" : "Next Quiz";
   if (percent > state.bestScore) {
     state.bestScore = percent;
     saveProgress();
   }
+}
+
+function advanceQuiz() {
+  if (state.quiz.complete) {
+    state.quiz.roundIndex = (state.quiz.roundIndex + 1) % QUIZ_ROUNDS_PER_LEVEL;
+    resetQuiz();
+    return;
+  }
+  if (!state.quiz.answered) {
+    elements.quizFeedback.textContent = "Answer the current question before moving on.";
+    return;
+  }
+  state.quiz.questionIndex += 1;
+  if (state.quiz.questionIndex >= QUIZ_LENGTH) {
+    finishQuiz();
+    return;
+  }
+  state.quiz.current = null;
+  state.quiz.answered = false;
+  newQuizQuestion();
+}
+
+function changeQuizLevel() {
+  state.quiz.level = elements.quizLevel.value;
+  state.quiz.roundIndex = 0;
+  resetQuiz();
 }
 
 function currentAnalogyBank() {
@@ -491,8 +560,9 @@ document.getElementById("shuffle-cards").addEventListener("click", () => {
 });
 document.getElementById("mark-mastered").addEventListener("click", toggleMastered);
 elements.flashcardSearch.addEventListener("input", updateFlashcardSearch);
-document.getElementById("next-question").addEventListener("click", newQuizQuestion);
+document.getElementById("next-question").addEventListener("click", advanceQuiz);
 document.getElementById("reset-quiz").addEventListener("click", resetQuiz);
+elements.quizLevel.addEventListener("change", changeQuizLevel);
 document.getElementById("next-analogy").addEventListener("click", nextAnalogy);
 elements.analogyLevel.addEventListener("change", changeAnalogyLevel);
 document.getElementById("reset-match").addEventListener("click", buildMatchBoard);
