@@ -402,6 +402,35 @@ input {
   font-weight: 700;
 }
 
+.level-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(240, 109, 94, 0.08);
+  border: 1px solid rgba(240, 109, 94, 0.18);
+}
+
+.level-select-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--secondary);
+}
+
+.level-select-wrap select {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 700;
+  padding-right: 0.2rem;
+  min-width: 92px;
+}
+
+.level-select-wrap select:focus {
+  outline: none;
+}
+
 .option-grid {
   display: grid;
   gap: 12px;
