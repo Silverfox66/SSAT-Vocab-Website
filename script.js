@@ -8,8 +8,7 @@ const state = {
   mastered: new Set(JSON.parse(localStorage.getItem("vocab-mastered") || "[]")),
   bestScore: Number(localStorage.getItem(BEST_QUIZ_SCORE_KEY) || 0),
   quiz: { asked: 0, correct: 0, current: null, answered: false, complete: false },
-  analogies: shuffle([...ANALOGIES]),
-  analogyIndex: 0,
+  analogies: { level: "easy", setIndex: 0, questionIndex: 0, answered: false },
   match: { board: [], selected: [], matched: 0, locked: false },
   speed: { timer: 30, score: 0, current: null, intervalId: null, active: false },
 };
@@ -35,6 +34,7 @@ const elements = {
   quizSummary: document.getElementById("quiz-summary"),
   quizProgress: document.getElementById("quiz-progress"),
   quizScore: document.getElementById("quiz-score"),
+  analogyLevel: document.getElementById("analogy-level"),
   analogyStem: document.getElementById("analogy-stem"),
   analogyOptions: document.getElementById("analogy-options"),
   analogyFeedback: document.getElementById("analogy-feedback"),
@@ -258,13 +258,25 @@ function finishQuiz() {
   }
 }
 
+function currentAnalogyBank() {
+  return ANALOGY_LEVELS[state.analogies.level];
+}
+
+function currentAnalogyItem() {
+  return currentAnalogyBank()[state.analogies.setIndex][state.analogies.questionIndex];
+}
+
 function renderAnalogy() {
-  const item = state.analogies[state.analogyIndex % state.analogies.length];
+  const item = currentAnalogyItem();
+  const levelLabel = state.analogies.level[0].toUpperCase() + state.analogies.level.slice(1);
+  state.analogies.answered = false;
+  elements.analogyLevel.value = state.analogies.level;
   elements.analogyStem.textContent = item.stem;
   elements.analogyOptions.innerHTML = "";
   elements.analogyFeedback.textContent = "";
   elements.analogyExplanation.textContent = "";
-  elements.analogyProgress.textContent = `Set ${state.analogyIndex + 1} of ${state.analogies.length}`;
+  elements.analogyProgress.textContent =
+    `${levelLabel} • Set ${state.analogies.setIndex + 1} of 15 • Question ${state.analogies.questionIndex + 1} of 20`;
   item.options.forEach((option) => {
     const button = document.createElement("button");
     button.className = "option-btn";
@@ -275,12 +287,10 @@ function renderAnalogy() {
 }
 
 function answerAnalogy(button, option, answer) {
-  const alreadyChosen = [...elements.analogyOptions.children].some((choice) =>
-    choice.classList.contains("correct") || choice.classList.contains("wrong")
-  );
-  if (alreadyChosen) {
+  if (state.analogies.answered) {
     return;
   }
+  state.analogies.answered = true;
   if (option === answer) {
     button.classList.add("correct");
     elements.analogyFeedback.textContent = "Correct relationship.";
@@ -293,11 +303,31 @@ function answerAnalogy(button, option, answer) {
       }
     });
   }
-  elements.analogyExplanation.textContent = state.analogies[state.analogyIndex].explanation;
+  elements.analogyExplanation.textContent = currentAnalogyItem().explanation;
 }
 
 function nextAnalogy() {
-  state.analogyIndex = (state.analogyIndex + 1) % state.analogies.length;
+  if (!state.analogies.answered) {
+    elements.analogyFeedback.textContent = "Choose an answer before moving to the next analogy.";
+    return;
+  }
+  state.analogies.questionIndex += 1;
+  if (state.analogies.questionIndex >= 20) {
+    state.analogies.questionIndex = 0;
+    state.analogies.setIndex += 1;
+    if (state.analogies.setIndex >= 15) {
+      state.analogies.setIndex = 0;
+      elements.analogyFeedback.textContent = `You finished all 15 ${state.analogies.level} sets. Starting again at Set 1.`;
+    }
+  }
+  renderAnalogy();
+}
+
+function changeAnalogyLevel() {
+  state.analogies.level = elements.analogyLevel.value;
+  state.analogies.setIndex = 0;
+  state.analogies.questionIndex = 0;
+  state.analogies.answered = false;
   renderAnalogy();
 }
 
@@ -464,6 +494,7 @@ elements.flashcardSearch.addEventListener("input", updateFlashcardSearch);
 document.getElementById("next-question").addEventListener("click", newQuizQuestion);
 document.getElementById("reset-quiz").addEventListener("click", resetQuiz);
 document.getElementById("next-analogy").addEventListener("click", nextAnalogy);
+elements.analogyLevel.addEventListener("change", changeAnalogyLevel);
 document.getElementById("reset-match").addEventListener("click", buildMatchBoard);
 document.getElementById("start-speed").addEventListener("click", startSpeedRound);
 elements.wordbankSearch.addEventListener("input", renderWordBank);
