@@ -2225,3 +2225,281 @@ const ANALOGIES = [
     explanation: "If something is audible, you can hear it. If it is visible, you can see it.",
   },
 ];
+
+function rotateChoices(choices, offset) {
+  return choices.map((_, index) => choices[(index + offset) % choices.length]);
+}
+
+function buildAnalogyQuestion(relation, setIndex, questionIndex) {
+  const pairs = relation.pairs;
+  const baseIndex = (setIndex * 3 + questionIndex * 2) % pairs.length;
+  let promptIndex = (setIndex * 5 + questionIndex * 7 + 1) % pairs.length;
+  if (promptIndex === baseIndex) {
+    promptIndex = (promptIndex + 1) % pairs.length;
+  }
+  const base = pairs[baseIndex];
+  const prompt = pairs[promptIndex];
+  const distractors = [];
+  let cursor = (promptIndex + setIndex + questionIndex + 1) % pairs.length;
+  while (distractors.length < 3) {
+    const candidate = pairs[cursor][1];
+    if (candidate !== prompt[1] && !distractors.includes(candidate)) {
+      distractors.push(candidate);
+    }
+    cursor = (cursor + 1) % pairs.length;
+  }
+  const options = rotateChoices([prompt[1], ...distractors], (setIndex + questionIndex) % 4);
+  return {
+    stem: `${base[0]} is to ${base[1]} as ${prompt[0]} is to ...`,
+    options,
+    answer: prompt[1],
+    explanation: relation.explanation,
+  };
+}
+
+function buildAnalogySets(catalog) {
+  const sets = [];
+  for (let setIndex = 0; setIndex < 15; setIndex += 1) {
+    const questions = [];
+    for (let questionIndex = 0; questionIndex < 20; questionIndex += 1) {
+      const relation = catalog[(setIndex * 20 + questionIndex) % catalog.length];
+      questions.push(buildAnalogyQuestion(relation, setIndex, questionIndex));
+    }
+    sets.push(questions);
+  }
+  return sets;
+}
+
+const ANALOGY_LEVELS = {
+  easy: buildAnalogySets([
+    {
+      explanation: "Both pairs use synonyms.",
+      pairs: [
+        ["happy", "joyful"],
+        ["small", "tiny"],
+        ["begin", "start"],
+        ["large", "huge"],
+        ["smart", "clever"],
+        ["quiet", "silent"],
+        ["brave", "bold"],
+        ["finish", "complete"],
+        ["fast", "quick"],
+        ["safe", "secure"],
+      ],
+    },
+    {
+      explanation: "Both pairs use opposites.",
+      pairs: [
+        ["hot", "cold"],
+        ["early", "late"],
+        ["victory", "defeat"],
+        ["wide", "narrow"],
+        ["light", "dark"],
+        ["simple", "complex"],
+        ["hidden", "visible"],
+        ["calm", "stormy"],
+        ["ancient", "modern"],
+        ["scarce", "plentiful"],
+      ],
+    },
+    {
+      explanation: "The first word is part of the second word.",
+      pairs: [
+        ["petal", "flower"],
+        ["wheel", "car"],
+        ["page", "book"],
+        ["branch", "tree"],
+        ["toe", "foot"],
+        ["chapter", "novel"],
+        ["key", "piano"],
+        ["roof", "house"],
+        ["leaf", "plant"],
+        ["finger", "hand"],
+      ],
+    },
+    {
+      explanation: "The first word is a member of the second category.",
+      pairs: [
+        ["parsley", "herb"],
+        ["granite", "stone"],
+        ["salmon", "fish"],
+        ["ruby", "gem"],
+        ["oak", "tree"],
+        ["copper", "metal"],
+        ["daisy", "flower"],
+        ["violin", "instrument"],
+        ["tulip", "flower"],
+        ["whale", "mammal"],
+      ],
+    },
+    {
+      explanation: "The first word names a worker and the second names the place where that work happens.",
+      pairs: [
+        ["doctor", "hospital"],
+        ["lawyer", "courtroom"],
+        ["chef", "kitchen"],
+        ["pilot", "cockpit"],
+        ["teacher", "classroom"],
+        ["artist", "studio"],
+        ["librarian", "library"],
+        ["farmer", "farm"],
+        ["scientist", "laboratory"],
+        ["carpenter", "workshop"],
+      ],
+    },
+  ]),
+  medium: buildAnalogySets([
+    {
+      explanation: "Both pairs use synonyms.",
+      pairs: [
+        ["benevolent", "kind"],
+        ["candid", "frank"],
+        ["ardent", "passionate"],
+        ["lucid", "clear"],
+        ["prudent", "careful"],
+        ["resilient", "tough"],
+        ["concise", "brief"],
+        ["cordial", "warm"],
+        ["diligent", "hardworking"],
+        ["vivid", "bright"],
+      ],
+    },
+    {
+      explanation: "Both pairs use opposites.",
+      pairs: [
+        ["abundant", "scarce"],
+        ["hostile", "friendly"],
+        ["opaque", "transparent"],
+        ["timid", "bold"],
+        ["rigid", "flexible"],
+        ["lavish", "thrifty"],
+        ["chaos", "order"],
+        ["expand", "contract"],
+        ["ascent", "descent"],
+        ["permanent", "temporary"],
+      ],
+    },
+    {
+      explanation: "The first word creates or produces the second word.",
+      pairs: [
+        ["author", "book"],
+        ["composer", "symphony"],
+        ["architect", "blueprint"],
+        ["tailor", "garment"],
+        ["sculptor", "statue"],
+        ["inventor", "prototype"],
+        ["editor", "manuscript"],
+        ["director", "film"],
+        ["poet", "verse"],
+        ["designer", "logo"],
+      ],
+    },
+    {
+      explanation: "The first word is the home or usual place of the second word.",
+      pairs: [
+        ["hive", "bee"],
+        ["den", "bear"],
+        ["stable", "horse"],
+        ["nest", "eagle"],
+        ["burrow", "rabbit"],
+        ["kennel", "dog"],
+        ["coop", "chicken"],
+        ["web", "spider"],
+        ["reef", "coral"],
+        ["pond", "frog"],
+      ],
+    },
+    {
+      explanation: "The second word is the result or condition caused by the first.",
+      pairs: [
+        ["drought", "arid"],
+        ["flood", "soggy"],
+        ["exercise", "strong"],
+        ["neglect", "decay"],
+        ["sunlight", "warm"],
+        ["panic", "chaos"],
+        ["study", "prepared"],
+        ["practice", "skill"],
+        ["rain", "muddy"],
+        ["apology", "peace"],
+      ],
+    },
+  ]),
+  hard: buildAnalogySets([
+    {
+      explanation: "Both pairs use precise or advanced synonyms.",
+      pairs: [
+        ["obdurate", "stubborn"],
+        ["sagacious", "wise"],
+        ["laconic", "brief"],
+        ["magnanimous", "generous"],
+        ["obfuscate", "confuse"],
+        ["pernicious", "harmful"],
+        ["loquacious", "talkative"],
+        ["austere", "severe"],
+        ["ephemeral", "short-lived"],
+        ["equivocal", "ambiguous"],
+      ],
+    },
+    {
+      explanation: "Both pairs use advanced opposites.",
+      pairs: [
+        ["ornate", "plain"],
+        ["placid", "turbulent"],
+        ["prudent", "reckless"],
+        ["conciliatory", "belligerent"],
+        ["prolific", "barren"],
+        ["lucid", "muddled"],
+        ["tenacious", "fickle"],
+        ["candid", "devious"],
+        ["abstemious", "indulgent"],
+        ["benevolent", "malicious"],
+      ],
+    },
+    {
+      explanation: "The first word helps create, soften, or shape the second idea.",
+      pairs: [
+        ["rhetoric", "persuasion"],
+        ["invective", "insult"],
+        ["euphemism", "softening"],
+        ["mnemonic", "memory"],
+        ["panacea", "cure"],
+        ["dirge", "mourning"],
+        ["eulogy", "praise"],
+        ["epitaph", "remembrance"],
+        ["parable", "lesson"],
+        ["satire", "criticism"],
+      ],
+    },
+    {
+      explanation: "The first word is used to manage, solve, or respond to the second.",
+      pairs: [
+        ["arbiter", "dispute"],
+        ["antidote", "poison"],
+        ["curator", "collection"],
+        ["mentor", "apprentice"],
+        ["protocol", "procedure"],
+        ["remedy", "problem"],
+        ["catalyst", "change"],
+        ["buffer", "impact"],
+        ["sentinel", "danger"],
+        ["surrogate", "absence"],
+      ],
+    },
+    {
+      explanation: "The second word is the broader field or whole to which the first belongs.",
+      pairs: [
+        ["stanza", "poem"],
+        ["thesis", "argument"],
+        ["pixel", "image"],
+        ["cell", "tissue"],
+        ["crescent", "moon"],
+        ["shard", "vase"],
+        ["ripple", "water"],
+        ["clause", "contract"],
+        ["motif", "novel"],
+        ["axiom", "logic"],
+      ],
+    },
+  ]),
+};
