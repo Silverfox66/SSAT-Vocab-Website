@@ -214,6 +214,13 @@ function currentQuizRound() {
   return currentQuizBank().rounds[state.quiz.roundIndex];
 }
 
+function renderQuizMeta() {
+  const levelLabel = state.quiz.level[0].toUpperCase() + state.quiz.level.slice(1);
+  elements.quizProgress.textContent =
+    `${levelLabel} • Quiz ${state.quiz.roundIndex + 1} of ${QUIZ_ROUNDS_PER_LEVEL} • Question ${state.quiz.questionIndex + 1} of ${QUIZ_LENGTH}`;
+  elements.quizScore.textContent = `Score ${state.quiz.correct}/${QUIZ_LENGTH}`;
+}
+
 function newQuizQuestion() {
   if (state.quiz.complete) {
     return;
@@ -243,10 +250,7 @@ function newQuizQuestion() {
     button.addEventListener("click", () => answerQuiz(button, option));
     elements.quizOptions.appendChild(button);
   });
-  const levelLabel = state.quiz.level[0].toUpperCase() + state.quiz.level.slice(1);
-  elements.quizProgress.textContent =
-    `${levelLabel} • Quiz ${state.quiz.roundIndex + 1} of ${QUIZ_ROUNDS_PER_LEVEL} • Question ${state.quiz.questionIndex + 1} of ${QUIZ_LENGTH}`;
-  elements.quizScore.textContent = `Score ${state.quiz.correct}/${state.quiz.questionIndex}`;
+  renderQuizMeta();
 }
 
 function answerQuiz(button, option) {
@@ -268,6 +272,7 @@ function answerQuiz(button, option) {
       }
     });
   }
+  renderQuizMeta();
 }
 
 function resetQuiz() {
