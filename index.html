@@ -126,7 +126,15 @@
                 <h2>Answer a fresh vocab question.</h2>
               </div>
               <div class="chip-row">
-                <span class="pill" id="quiz-progress">Question 1 of 10</span>
+                <label class="level-select-wrap" for="quiz-level">
+                  <span class="level-select-label">Level</span>
+                  <select id="quiz-level" aria-label="Select quiz difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </label>
+                <span class="pill" id="quiz-progress">Easy • Quiz 1 of 10 • Question 1 of 10</span>
                 <span class="pill" id="quiz-score">Score 0/0</span>
               </div>
             </div>
