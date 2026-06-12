@@ -578,7 +578,14 @@ elements.modeCards.forEach((button) => {
 });
 
 elements.jumpButtons.forEach((button) => {
-  button.addEventListener("click", () => setMode(button.dataset.jump));
+  button.addEventListener("click", () => {
+    const target = document.getElementById(button.dataset.jump);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    setMode(button.dataset.jump);
+  });
 });
 
 updateMetrics();
