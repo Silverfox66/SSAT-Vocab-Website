@@ -1,11 +1,18 @@
 const QUIZ_LENGTH = 10;
 const QUIZ_ROUNDS_PER_LEVEL = 10;
+const FLASHCARD_SET_SIZE = 50;
 const BEST_QUIZ_SCORE_KEY = "vocab-best-quiz-score";
+
+const FLASHCARD_SETS = Array.from({ length: Math.ceil(VOCAB_WORDS.length / FLASHCARD_SET_SIZE) }, (_, index) =>
+  VOCAB_WORDS.slice(index * FLASHCARD_SET_SIZE, (index + 1) * FLASHCARD_SET_SIZE)
+);
 
 const state = {
   currentMode: "flashcards",
-  flashcards: [...VOCAB_WORDS],
+  flashcardSetIndex: 0,
+  flashcards: [...FLASHCARD_SETS[0]],
   cardIndex: 0,
+  touch: { startX: 0, startY: 0, suppressClick: false },
   mastered: new Set(JSON.parse(localStorage.getItem("vocab-mastered") || "[]")),
   bestScore: Number(localStorage.getItem(BEST_QUIZ_SCORE_KEY) || 0),
   quiz: { level: "easy", roundIndex: 0, questionIndex: 0, correct: 0, current: null, answered: false, complete: false },
@@ -28,6 +35,7 @@ const elements = {
   cardDefinition: document.getElementById("card-definition"),
   cardExample: document.getElementById("card-example"),
   cardStatus: document.getElementById("card-status"),
+  flashcardSet: document.getElementById("flashcard-set"),
   flashcardSearch: document.getElementById("flashcard-search"),
   quizLevel: document.getElementById("quiz-level"),
   quizWord: document.getElementById("quiz-word"),
@@ -117,6 +125,33 @@ function saveProgress() {
   updateMetrics();
 }
 
+function currentFlashcardSet() {
+  return FLASHCARD_SETS[state.flashcardSetIndex] || [];
+}
+
+function populateFlashcardSets() {
+  elements.flashcardSet.innerHTML = "";
+  FLASHCARD_SETS.forEach((set, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = `Set ${index + 1} (${set.length} cards)`;
+    elements.flashcardSet.appendChild(option);
+  });
+}
+
+function updateFlashcardDeck() {
+  const query = elements.flashcardSearch.value.trim().toLowerCase();
+  const source = currentFlashcardSet();
+  state.flashcards = source.filter((entry) => {
+    if (!query) {
+      return true;
+    }
+    return entry.word.toLowerCase().includes(query) || entry.definition.toLowerCase().includes(query);
+  });
+  state.cardIndex = 0;
+  renderFlashcard();
+}
+
 function renderFlashcard() {
   if (!state.flashcards.length) {
     elements.cardWord.textContent = "No matches";
@@ -139,7 +174,7 @@ function renderFlashcard() {
   elements.cardExample.textContent = card.example;
   elements.cardStatus.textContent = state.mastered.has(card.word)
     ? "Mastered"
-    : `Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
+    : `Set ${state.flashcardSetIndex + 1} of ${FLASHCARD_SETS.length} • Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
 }
 
 function speakCurrentWord(event) {
@@ -163,7 +198,7 @@ function speakCurrentWord(event) {
     elements.speakWord.classList.remove("speaking");
     elements.cardStatus.textContent = state.mastered.has(current.word)
       ? "Mastered"
-      : `Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
+      : `Set ${state.flashcardSetIndex + 1} of ${FLASHCARD_SETS.length} • Card ${state.cardIndex + 1} of ${state.flashcards.length}`;
   };
   utterance.onerror = () => {
     elements.speakWord.classList.remove("speaking");
@@ -173,15 +208,14 @@ function speakCurrentWord(event) {
 }
 
 function updateFlashcardSearch() {
-  const query = elements.flashcardSearch.value.trim().toLowerCase();
-  state.flashcards = VOCAB_WORDS.filter((entry) => {
-    if (!query) {
-      return true;
-    }
-    return entry.word.toLowerCase().includes(query) || entry.definition.toLowerCase().includes(query);
-  });
+  updateFlashcardDeck();
+}
+
+function changeFlashcardSet() {
+  state.flashcardSetIndex = Number(elements.flashcardSet.value);
   state.cardIndex = 0;
-  renderFlashcard();
+  elements.flashcardSearch.value = "";
+  updateFlashcardDeck();
 }
 
 function nextCard(step) {
@@ -190,6 +224,23 @@ function nextCard(step) {
   }
   state.cardIndex = (state.cardIndex + step + state.flashcards.length) % state.flashcards.length;
   renderFlashcard();
+}
+
+function handleFlashcardTouchStart(event) {
+  const touch = event.changedTouches[0];
+  state.touch.startX = touch.clientX;
+  state.touch.startY = touch.clientY;
+  state.touch.suppressClick = false;
+}
+
+function handleFlashcardTouchEnd(event) {
+  const touch = event.changedTouches[0];
+  const deltaX = touch.clientX - state.touch.startX;
+  const deltaY = touch.clientY - state.touch.startY;
+  if (Math.abs(deltaX) > 55 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+    state.touch.suppressClick = true;
+    nextCard(deltaX < 0 ? 1 : -1);
+  }
 }
 
 function toggleMastered() {
@@ -553,7 +604,15 @@ function renderWordBank() {
 }
 
 document.getElementById("flip-card").addEventListener("click", () => elements.flashcard.classList.toggle("flipped"));
-elements.flashcard.addEventListener("click", () => elements.flashcard.classList.toggle("flipped"));
+elements.flashcard.addEventListener("click", () => {
+  if (state.touch.suppressClick) {
+    state.touch.suppressClick = false;
+    return;
+  }
+  elements.flashcard.classList.toggle("flipped");
+});
+elements.flashcard.addEventListener("touchstart", handleFlashcardTouchStart, { passive: true });
+elements.flashcard.addEventListener("touchend", handleFlashcardTouchEnd, { passive: true });
 elements.speakWord.addEventListener("click", speakCurrentWord);
 document.getElementById("prev-card").addEventListener("click", () => nextCard(-1));
 document.getElementById("next-card").addEventListener("click", () => nextCard(1));
@@ -563,6 +622,7 @@ document.getElementById("shuffle-cards").addEventListener("click", () => {
   renderFlashcard();
 });
 document.getElementById("mark-mastered").addEventListener("click", toggleMastered);
+elements.flashcardSet.addEventListener("change", changeFlashcardSet);
 elements.flashcardSearch.addEventListener("input", updateFlashcardSearch);
 document.getElementById("next-question").addEventListener("click", advanceQuiz);
 document.getElementById("reset-quiz").addEventListener("click", resetQuiz);
@@ -574,7 +634,7 @@ document.getElementById("start-speed").addEventListener("click", startSpeedRound
 elements.wordbankSearch.addEventListener("input", renderWordBank);
 
 elements.modeCards.forEach((button) => {
-    button.addEventListener("click", () => {
+  button.addEventListener("click", () => {
     setMode(button.dataset.mode);
     document.getElementById(button.dataset.mode).scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -592,6 +652,7 @@ elements.jumpButtons.forEach((button) => {
 });
 
 updateMetrics();
+populateFlashcardSets();
 renderFlashcard();
 resetQuiz();
 renderAnalogy();
