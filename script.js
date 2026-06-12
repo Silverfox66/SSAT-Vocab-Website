@@ -574,7 +574,10 @@ document.getElementById("start-speed").addEventListener("click", startSpeedRound
 elements.wordbankSearch.addEventListener("input", renderWordBank);
 
 elements.modeCards.forEach((button) => {
-  button.addEventListener("click", () => setMode(button.dataset.mode));
+    button.addEventListener("click", () => {
+    setMode(button.dataset.mode);
+    document.getElementById(button.dataset.mode).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 });
 
 elements.jumpButtons.forEach((button) => {
