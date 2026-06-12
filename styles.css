@@ -308,6 +308,8 @@ input {
   transition: transform 0.78s cubic-bezier(0.2, 0.78, 0.18, 1);
   will-change: transform;
   cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .flashcard.flipped {
